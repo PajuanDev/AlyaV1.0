@@ -1,0 +1,17 @@
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;svg width="64px" height="64px" viewBox="0 0 64 64" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"&gt;
+    &lt;title&gt;Alya Avatar&lt;/title&gt;
+    &lt;defs&gt;
+        &lt;linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-1"&gt;
+            &lt;stop stop-color="hsl(var(--primary))" offset="0%"&gt;&lt;/stop&gt;
+            &lt;stop stop-color="hsl(var(--accent))" offset="100%"&gt;&lt;/stop&gt;
+        &lt;/linearGradient&gt;
+    &lt;/defs&gt;
+    &lt;g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"&gt;
+        &lt;g id="Alya-Avatar"&gt;
+            &lt;circle id="Background" fill="url(#linearGradient-1)" cx="32" cy="32" r="32"&gt;&lt;/circle&gt;
+            &lt;path d="M20,45 L20,19 L28.3333333,19 C32.581922,19 36,22.418078 36,26.6666667 C36,30.9152553 32.581922,34.3333333 28.3333333,34.3333333 L23.3333333,34.3333333 M23.3333333,34.3333333 L23.3333333,45 M23.3333333,34.3333333 L33.3333333,45" id="A" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"&gt;&lt;/path&gt;
+            &lt;circle id="Dot" fill="#FFFFFF" cx="42" cy="43" r="3"&gt;&lt;/circle&gt;
+        &lt;/g&gt;
+    &lt;/g&gt;
+&lt;/svg&gt;
