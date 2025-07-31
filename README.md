@@ -1,40 +1,35 @@
-
 # Alya AI Chat
 
-This project uses Vite and React.
+Alya AI Chat is a React and Vite based web application that communicates with a small Express API server.
 
 ## Requirements
 
 - Node.js v22 (see `.nvmrc`)
 
 Use `nvm install` then `nvm use` to activate the correct Node version.
-=======
 
-# Environment Variables
+## Environment Variables
 
-Create a `.env` file based on `.env.example` and provide values for the following keys:
+Create a `.env` file based on `.env.example` and provide values for:
 
-- `VITE_API_URL` - Base URL used for API requests, e.g. `http://localhost:3000/api`.
-- `DB_URL` - Connection string for the database, e.g. `postgresql://user:password@localhost:5432/database`.
-- `JWT_SECRET` - Secret value used to sign JWT tokens.
+- `VITE_API_URL` - Base URL used for API requests (e.g. `http://localhost:3001`).
 
-# Alya AI Chat
+## Server Setup
 
-Alya AI Chat is a React and Vite based web application providing an intelligent assistant experience. It offers onboarding to configure your workspace, a dashboard for quick actions and insights, and a chat interface backed by AI. The project includes pages for integrations, automation workflows and more.
+The Express API is located in the `server/` directory.
 
-## Features
+```bash
+cd server
+npm install
+cp .env.example .env # edit values if necessary
+npm start
+```
 
-- **AI powered chat interface** with contextual suggestions.
-- **Onboarding workflow** that collects company data and user preferences.
-- **Dashboard** with quick links to automations and integrations.
-- **Automation management** to create and track automated tasks.
-- **Documentation, FAQ, and tutorials** sections to help users get started.
+Server environment variables:
 
-## Prerequisites
-
-- **Node.js** 20.19.1 (see `.nvmrc`)
-- npm 9+
-- Optional global tools: `pnpm` or `yarn` if you prefer alternative package managers.
+- `PORT` - Port for the API (default `3001`).
+- `MONGO_URL` - MongoDB connection string.
+- `JWT_SECRET` - Secret used to sign JWT tokens.
 
 ## Installation
 
@@ -56,22 +51,10 @@ To create an optimized production build:
 npm run build
 ```
 
-## Development workflow
-
-1. Install dependencies with `npm install`.
-2. Use `npm run dev` to start the Vite development server.
-3. Code changes in `src/` will hot reload in the browser.
-4. Linting can be executed using `npm run lint` once an ESLint configuration is available.
-5. When ready, build the project with `npm run build`.
-
 ### Running tests
-
-Tests are not included yet. Once a test framework is added (e.g. Jest or Vitest), run:
 
 ```bash
 npm test
 ```
 
 Use this command in your CI pipeline to ensure new changes do not break existing functionality.
-
-

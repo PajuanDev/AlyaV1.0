@@ -182,13 +182,16 @@ logger.error = (msg, options) => {
 }
 
 export default defineConfig({
-	customLogger: logger,
-	plugins: [react(), addTransformIndexHtml],
-	server: {
-		cors: true,
-		headers: {
-			'Cross-Origin-Embedder-Policy': 'credentialless',
-		},
+        customLogger: logger,
+        plugins: [react(), addTransformIndexHtml],
+        define: {
+                'process.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL)
+        },
+        server: {
+                cors: true,
+                headers: {
+                        'Cross-Origin-Embedder-Policy': 'credentialless',
+                },
 		allowedHosts: true,
 	},
 	resolve: {
