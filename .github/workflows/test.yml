@@ -16,7 +16,6 @@ jobs:
           node-version: 20
       - name: Set env
         run: echo "VITE_API_URL=http://localhost:3001" >> $GITHUB_ENV && echo "DB_URL=test" >> $GITHUB_ENV && echo "JWT_SECRET=test" >> $GITHUB_ENV
-          node-version: 22
 
       - run: npm install
       - run: npm test
