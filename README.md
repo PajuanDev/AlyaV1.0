@@ -1,4 +1,15 @@
 
+# Alya AI Chat
+
+This project uses Vite and React.
+
+## Requirements
+
+- Node.js v22 (see `.nvmrc`)
+
+Use `nvm install` then `nvm use` to activate the correct Node version.
+=======
+
 # Environment Variables
 
 Create a `.env` file based on `.env.example` and provide values for the following keys:
@@ -62,4 +73,5 @@ npm test
 ```
 
 Use this command in your CI pipeline to ensure new changes do not break existing functionality.
+
 
