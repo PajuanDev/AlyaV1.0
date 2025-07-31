@@ -1,4 +1,27 @@
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
+
+import { v4 as uuidv4 } from 'uuid';
+import AuthContext from '@/contexts/AuthContext';
+import { toast } from '@/components/ui/use-toast';
+
+const ChatContext = createContext(null);
+const API_URL = process.env.VITE_API_URL;
+
+export const ChatProvider = ({ children }) => {
+  const { user, token } = useContext(AuthContext);
+  const [conversations, setConversations] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [activeConversationId, setActiveConversationId] = useState(null);
+  const [isLoadingConversation, setIsLoadingConversation] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user || !token) {
+        setConversations([]);
+        setProjects([]);
+        setIsLoadingConversation(false);
+        return;
+=======
     import { v4 as uuidv4 } from 'uuid';
     import AuthContext from '@/contexts/AuthContext';
     import { toast } from '@/components/ui/use-toast';
@@ -17,6 +40,7 @@ import React, { createContext, useState, useEffect, useContext, useCallback } fr
         settings: { enableHistory: true, aiModel: 'alya-standard', temperature: 0.7 },
         projectId: null,
         archived: false,
+
       }
     ];
 

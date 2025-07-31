@@ -1,8 +1,14 @@
 import React, { createContext, useState, useEffect } from 'react';
+
+
+const AuthContext = createContext();
+const API_URL = process.env.VITE_API_URL;
+=======
 import { v4 as uuidv4 } from 'uuid';
 import { API_URL, DB_URL, JWT_SECRET } from '@/config';
 
 const AuthContext = createContext();
+
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -104,6 +110,8 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('alyaUser');
   };
 
+
+=======
   const updateUserProfile = (profileData) => {
     setLoading(true);
     return new Promise((resolve, reject) => {
@@ -153,15 +161,25 @@ export const AuthProvider = ({ children }) => {
     });
   };
 
+
   const isOnboardingCompleted = () => {
     return user ? user.onboardingCompleted : false;
   };
 
   return (
+
+    <AuthContext.Provider value={{ user, token, loading, login, signup, logout, onboardingData, isOnboardingCompleted }}>
+=======
     <AuthContext.Provider value={{ user, loading, login, signup, logout, updateUserProfile, onboardingData, updateOnboardingData, isOnboardingCompleted }}>
+
       {children}
     </AuthContext.Provider>
   );
 };
+
+
+export default AuthContext;
+=======
+
 
 export default AuthContext;
