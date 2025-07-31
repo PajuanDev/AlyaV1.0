@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react';
-    import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
+import { API_URL, DB_URL, JWT_SECRET } from '@/config';
 
     const AuthContext = createContext();
 
@@ -9,6 +10,7 @@ import React, { createContext, useState, useEffect } from 'react';
       const [onboardingData, setOnboardingData] = useState({});
 
       useEffect(() => {
+        console.debug('Loaded env vars', { API_URL, DB_URL, JWT_SECRET });
         const storedUser = localStorage.getItem('alyaUser');
         const storedOnboardingData = localStorage.getItem('alyaOnboardingData');
         

@@ -1,3 +1,12 @@
+
+# Environment Variables
+
+Create a `.env` file based on `.env.example` and provide values for the following keys:
+
+- `VITE_API_URL` - Base URL used for API requests, e.g. `http://localhost:3000/api`.
+- `DB_URL` - Connection string for the database, e.g. `postgresql://user:password@localhost:5432/database`.
+- `JWT_SECRET` - Secret value used to sign JWT tokens.
+
 # Alya AI Chat
 
 Alya AI Chat is a React and Vite based web application providing an intelligent assistant experience. It offers onboarding to configure your workspace, a dashboard for quick actions and insights, and a chat interface backed by AI. The project includes pages for integrations, automation workflows and more.
@@ -53,3 +62,4 @@ npm test
 ```
 
 Use this command in your CI pipeline to ensure new changes do not break existing functionality.
+
