@@ -66,12 +66,16 @@ npm run build
 
 ### Running tests
 
-Tests are not included yet. Once a test framework is added (e.g. Jest or Vitest), run:
+Run the Jest test suite with:
 
 ```bash
 npm test
 ```
 
-Use this command in your CI pipeline to ensure new changes do not break existing functionality.
+This executes all files in `src/__tests__` using `jest`. The current suite covers the authentication context, chat context and the theme toggle component. Use this command in your CI pipeline to ensure new changes do not break existing functionality.
+
+### Continuous Integration
+
+GitHub Actions runs the test suite on every push and pull request targeting `main`. The workflow defined in `.github/workflows/test.yml` checks out the code, installs Node.js 20, runs `npm install`, and then executes `npm test`.
 
 
