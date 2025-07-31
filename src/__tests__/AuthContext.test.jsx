@@ -13,6 +13,25 @@ describe('AuthContext', () => {
   beforeEach(() => {
     localStorage.clear();
     jest.useFakeTimers();
+    global.fetch = jest.fn((url, opts) => {
+      if (url.endsWith('/api/signup')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ token: 'tok', user: { id: '1', name: 'Test User', email: 'test@example.com' } })
+        });
+      }
+      if (url.endsWith('/api/login')) {
+        const body = JSON.parse(opts.body);
+        if (body.email === 'test@example.com' && body.password === 'pass') {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ token: 'tok', user: { id: '1', name: 'Test User', email: 'test@example.com' } })
+          });
+        }
+        return Promise.resolve({ ok: false });
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+    });
   });
 
   test('signup then login sets user', async () => {
