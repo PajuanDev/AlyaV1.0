@@ -1,272 +1,202 @@
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
-    import { v4 as uuidv4 } from 'uuid';
-    import AuthContext from '@/contexts/AuthContext';
-    import { toast } from '@/components/ui/use-toast';
+import { v4 as uuidv4 } from 'uuid';
+import AuthContext from '@/contexts/AuthContext';
+import { toast } from '@/components/ui/use-toast';
 
-    const ChatContext = createContext(null);
+const ChatContext = createContext(null);
+const API_URL = import.meta.env.VITE_API_URL;
 
-    const initialConversationsData = [
-      {
-        id: 'welcome-chat',
-        name: 'Bienvenue sur Alya',
-        messages: [
-          { id: uuidv4(), sender: 'ai', text: 'Bonjour ! Je suis Alya, votre assistante IA. Comment puis-je vous aider aujourd\'hui ?', timestamp: new Date().toISOString(), isThinking: false, isEdited: false, attachments: [] },
-        ],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        settings: { enableHistory: true, aiModel: 'alya-standard', temperature: 0.7 },
-        projectId: null,
-        archived: false,
-      }
-    ];
+export const ChatProvider = ({ children }) => {
+  const { user, token } = useContext(AuthContext);
+  const [conversations, setConversations] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [activeConversationId, setActiveConversationId] = useState(null);
+  const [isLoadingConversation, setIsLoadingConversation] = useState(true);
 
-    const initialProjectsData = [
-        { id: 'proj1', name: 'Marketing Q3' },
-        { id: 'proj2', name: 'Développement Produit X' },
-        { id: 'proj3', name: 'Recherche UX IA' },
-    ];
-
-    const loadFromLocalStorage = (key, defaultValue, userId) => {
-      if (!userId) return defaultValue;
-      const storedValue = localStorage.getItem(`${key}_${userId}`);
-      if (storedValue) {
-        try {
-          return JSON.parse(storedValue);
-        } catch (e) {
-          console.error(`Failed to parse ${key} from localStorage:`, e);
-          return defaultValue;
-        }
-      }
-      return defaultValue;
-    };
-
-    const saveToLocalStorage = (key, value, userId) => {
-      if (!userId) return;
-      localStorage.setItem(`${key}_${userId}`, JSON.stringify(value));
-    };
-
-    const normalizeConversation = (conv) => ({
-      ...conv,
-      settings: conv.settings || { enableHistory: true, aiModel: 'alya-standard', temperature: 0.7 },
-      projectId: conv.projectId === undefined ? null : conv.projectId,
-      archived: conv.archived === undefined ? false : conv.archived,
-      messages: (conv.messages || []).map(m => ({ ...m, attachments: m.attachments || [] })),
-    });
-
-    export const ChatProvider = ({ children }) => {
-      const { user } = useContext(AuthContext);
-      const [conversations, setConversations] = useState([]);
-      const [projects, setProjects] = useState([]);
-      const [activeConversationId, setActiveConversationId] = useState(null);
-      const [isLoadingConversation, setIsLoadingConversation] = useState(true);
-
-      useEffect(() => {
-        setIsLoadingConversation(true);
-        if (user) {
-          const loadedConversations = loadFromLocalStorage('alyaConversations', initialConversationsData, user.id).map(normalizeConversation);
-          setConversations(loadedConversations);
-          
-          const loadedProjects = loadFromLocalStorage('alyaProjects', initialProjectsData, user.id);
-          setProjects(loadedProjects);
-
-          const lastActiveId = localStorage.getItem(`lastActiveConv_${user.id}`);
-          if (lastActiveId && loadedConversations.find(c => c.id === lastActiveId)) {
-            setActiveConversationId(lastActiveId);
-          } else {
-            const firstRelevantConv = loadedConversations.filter(c => !c.archived).sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt))[0] 
-                                   || loadedConversations.sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt))[0];
-            if (firstRelevantConv) {
-              setActiveConversationId(firstRelevantConv.id);
-              localStorage.setItem(`lastActiveConv_${user.id}`, firstRelevantConv.id);
-            }
-          }
-        } else {
-          setConversations([]);
-          setProjects([]);
-          setActiveConversationId(null);
-        }
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user || !token) {
+        setConversations([]);
+        setProjects([]);
         setIsLoadingConversation(false);
-      }, [user]);
-      
-      useEffect(() => {
-        if (user && !isLoadingConversation) {
-          saveToLocalStorage('alyaConversations', conversations, user.id);
-        }
-      }, [conversations, user, isLoadingConversation]);
-
-      useEffect(() => {
-        if (user && !isLoadingConversation) {
-          saveToLocalStorage('alyaProjects', projects, user.id);
-        }
-      }, [projects, user, isLoadingConversation]);
-
-      useEffect(() => {
-        if (user && activeConversationId && !isLoadingConversation) {
-          localStorage.setItem(`lastActiveConv_${user.id}`, activeConversationId);
-        }
-      }, [activeConversationId, user, isLoadingConversation]);
-
-      const updateConversationsState = (updater) => {
-        setConversations(prev => updater(prev).sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt)));
-      };
-
-      const createConversation = useCallback((name = 'Nouvelle Conversation', projectId = null) => {
-        if (!user) return null;
-        const newConversation = normalizeConversation({
-          id: uuidv4(),
-          name,
-          messages: [{ id: uuidv4(), sender: 'ai', text: 'Nouvelle conversation initiée. Comment puis-je vous aider ?', timestamp: new Date().toISOString() }],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          projectId,
-        });
-        updateConversationsState(prev => [newConversation, ...prev]);
-        setActiveConversationId(newConversation.id);
-        toast({ title: "Conversation créée", description: `"${name}" a été ajoutée.`});
-        return newConversation.id;
-      }, [user]);
-
-      const deleteConversation = useCallback((id) => {
-        if (!user) return;
-        const convToDelete = conversations.find(c => c.id === id);
-        updateConversationsState(prev => prev.filter(conv => conv.id !== id));
-        if (activeConversationId === id) {
-            const remainingConversations = conversations.filter(c => c.id !== id && !c.archived);
-            const nextActive = remainingConversations.length > 0 ? remainingConversations.sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt))[0].id : null;
-            setActiveConversationId(nextActive);
-        }
-        toast({ title: "Conversation supprimée", description: `"${convToDelete?.name}" a été supprimée.`, variant: "destructive"});
-      }, [user, conversations, activeConversationId]);
-      
-      const renameConversation = useCallback((id, newName) => {
-        if (!user) return;
-        updateConversationsState(prev => prev.map(conv => conv.id === id ? { ...conv, name: newName, updatedAt: new Date().toISOString() } : conv));
-      }, [user]);
-
-      const updateConversationSettings = useCallback((id, newSettings) => {
-        if (!user) return;
-        updateConversationsState(prev => prev.map(conv => conv.id === id ? { ...conv, settings: {...conv.settings, ...newSettings}, updatedAt: new Date().toISOString() } : conv));
-      }, [user]);
-
-      const archiveConversation = useCallback((id, archiveStatus) => {
-        if (!user) return;
-        updateConversationsState(prev => prev.map(conv => conv.id === id ? { ...conv, archived: archiveStatus, updatedAt: new Date().toISOString() } : conv));
-        if (archiveStatus && activeConversationId === id) {
-            const nextActive = conversations.filter(c => c.id !== id && !c.archived).sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt))[0]?.id || null;
-            setActiveConversationId(nextActive);
-        }
-      }, [user, conversations, activeConversationId]);
-      
-      const assignConversationToProject = useCallback((conversationId, projectId) => {
-        if (!user) return;
-        updateConversationsState(prev => prev.map(conv => conv.id === conversationId ? { ...conv, projectId, updatedAt: new Date().toISOString() } : conv));
-      }, [user]);
-
-      const addMessage = useCallback((conversationId, sender, text, attachments = [], isThinking = false) => {
-        if (!user) return null;
-        const newMessage = { id: uuidv4(), sender, text, timestamp: new Date().toISOString(), isThinking, isEdited: false, attachments };
-        updateConversationsState(prev =>
-          prev.map(conv =>
-            conv.id === conversationId
-              ? { ...conv, messages: [...conv.messages, newMessage], updatedAt: new Date().toISOString() }
-              : conv
-          )
-        );
-        return newMessage.id;
-      }, [user]);
-
-      const updateMessage = useCallback((conversationId, messageId, newText, isThinking = false) => {
-        if (!user) return;
-         updateConversationsState(prev =>
-          prev.map(conv =>
-            conv.id === conversationId
-              ? { 
-                  ...conv, 
-                  messages: conv.messages.map(msg => 
-                    msg.id === messageId 
-                    ? { ...msg, text: newText, isThinking, timestamp: new Date().toISOString() } 
-                    : msg
-                  ),
-                  updatedAt: new Date().toISOString() 
-                }
-              : conv
-          )
-        );
-      }, [user]);
-
-      const editUserMessage = useCallback((conversationId, messageId, newText) => {
-        if (!user) return;
-        updateConversationsState(prev =>
-          prev.map(conv =>
-            conv.id === conversationId
-              ? {
-                  ...conv,
-                  messages: conv.messages.map(msg =>
-                    msg.id === messageId && msg.sender === 'user'
-                      ? { ...msg, text: newText, timestamp: new Date().toISOString(), isEdited: true }
-                      : msg
-                  ),
-                  updatedAt: new Date().toISOString()
-                }
-              : conv
-          )
-        );
-      }, [user]);
-      
-      const getConversationById = useCallback((id) => {
-        return conversations.find(conv => conv.id === id);
-      }, [conversations]);
-      
-      const activeConversation = conversations.find(conv => conv.id === activeConversationId);
-
-      const createProject = useCallback((name) => {
-        if (!user) return;
-        const newProject = { id: `proj${Date.now()}`, name };
-        setProjects(prev => [newProject, ...prev]);
-        toast({ title: "Projet créé", description: `Le projet "${name}" a été ajouté.` });
-        return newProject.id;
-      }, [user]);
-    
-      const renameProject = useCallback((id, newName) => {
-        if (!user) return;
-        setProjects(prev => prev.map(p => p.id === id ? { ...p, name: newName } : p));
-        toast({ title: "Projet renommé", description: `Nouveau nom : "${newName}".` });
-      }, [user]);
-    
-      const deleteProject = useCallback((id) => {
-        if (!user) return;
-        const projectToDelete = projects.find(p => p.id === id);
-        setProjects(prev => prev.filter(p => p.id !== id));
-        updateConversationsState(prevConvs => prevConvs.map(c => c.projectId === id ? { ...c, projectId: null } : c));
-        toast({ title: "Projet supprimé", description: `Le projet "${projectToDelete?.name}" et ses conversations associées ont été mis à jour.`, variant: "destructive" });
-      }, [user, projects]);
-
-
-      return (
-        <ChatContext.Provider value={{ 
-          conversations, 
-          projects,
-          activeConversationId, 
-          setActiveConversationId, 
-          createConversation, 
-          deleteConversation,
-          renameConversation,
-          updateConversationSettings,
-          archiveConversation,
-          assignConversationToProject,
-          addMessage,
-          updateMessage,
-          editUserMessage,
-          activeConversation,
-          getConversationById,
-          isLoadingConversation,
-          createProject,
-          renameProject,
-          deleteProject
-        }}>
-          {children}
-        </ChatContext.Provider>
-      );
+        return;
+      }
+      try {
+        const [convRes, projRes] = await Promise.all([
+          fetch(`${API_URL}/api/conversations`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${API_URL}/api/projects`, { headers: { Authorization: `Bearer ${token}` } })
+        ]);
+        const convs = await convRes.json();
+        const projs = await projRes.json();
+        setConversations(convs);
+        setProjects(projs);
+        setActiveConversationId(convs[0]?._id || null);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setIsLoadingConversation(false);
+      }
     };
+    setIsLoadingConversation(true);
+    fetchData();
+  }, [user, token]);
 
-    export default ChatContext;
+  const createConversation = useCallback(async (name = 'Nouvelle Conversation', projectId = null) => {
+    if (!token) return null;
+    const res = await fetch(`${API_URL}/api/conversations`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ name, projectId, messages: [], settings: { enableHistory: true, aiModel: 'alya-standard', temperature: 0.7 }, archived: false })
+    });
+    const conv = await res.json();
+    setConversations(prev => [conv, ...prev]);
+    setActiveConversationId(conv._id);
+    toast({ title: 'Conversation créée' });
+    return conv._id;
+  }, [token]);
+
+  const deleteConversation = useCallback(async (id) => {
+    if (!token) return;
+    await fetch(`${API_URL}/api/conversations/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+    setConversations(prev => prev.filter(c => c._id !== id));
+  }, [token]);
+
+  const renameConversation = useCallback(async (id, newName) => {
+    if (!token) return;
+    const res = await fetch(`${API_URL}/api/conversations/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ name: newName })
+    });
+    const conv = await res.json();
+    setConversations(prev => prev.map(c => c._id === id ? conv : c));
+  }, [token]);
+
+  const updateConversationSettings = useCallback(async (id, newSettings) => {
+    if (!token) return;
+    const res = await fetch(`${API_URL}/api/conversations/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ settings: newSettings })
+    });
+    const conv = await res.json();
+    setConversations(prev => prev.map(c => c._id === id ? conv : c));
+  }, [token]);
+
+  const archiveConversation = useCallback(async (id, archiveStatus) => {
+    if (!token) return;
+    const res = await fetch(`${API_URL}/api/conversations/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ archived: archiveStatus })
+    });
+    const conv = await res.json();
+    setConversations(prev => prev.map(c => c._id === id ? conv : c));
+  }, [token]);
+
+  const assignConversationToProject = useCallback(async (conversationId, projectId) => {
+    if (!token) return;
+    const res = await fetch(`${API_URL}/api/conversations/${conversationId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ projectId })
+    });
+    const conv = await res.json();
+    setConversations(prev => prev.map(c => c._id === conversationId ? conv : c));
+  }, [token]);
+
+  const addMessage = useCallback(async (conversationId, sender, text, attachments = [], isThinking = false) => {
+    if (!token) return null;
+    const res = await fetch(`${API_URL}/api/conversations/${conversationId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ $push: { messages: { sender, text, attachments, isThinking, timestamp: new Date(), id: uuidv4(), isEdited: false } } })
+    });
+    const conv = await res.json();
+    setConversations(prev => prev.map(c => c._id === conversationId ? conv : c));
+    return conv.messages[conv.messages.length - 1]?.id;
+  }, [token]);
+
+  const updateMessage = useCallback(async (conversationId, messageId, newText, isThinking = false) => {
+    if (!token) return;
+    const conv = conversations.find(c => c._id === conversationId);
+    if (!conv) return;
+    const messages = conv.messages.map(m => m.id === messageId ? { ...m, text: newText, isThinking, timestamp: new Date() } : m);
+    await fetch(`${API_URL}/api/conversations/${conversationId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ messages })
+    });
+    setConversations(prev => prev.map(c => c._id === conversationId ? { ...c, messages } : c));
+  }, [token, conversations]);
+
+  const editUserMessage = useCallback(async (conversationId, messageId, newText) => {
+    if (!token) return;
+    await updateMessage(conversationId, messageId, newText);
+  }, [updateMessage, token]);
+
+  const getConversationById = useCallback((id) => {
+    return conversations.find(conv => conv._id === id);
+  }, [conversations]);
+
+  const activeConversation = conversations.find(conv => conv._id === activeConversationId);
+
+  const createProject = useCallback(async (name) => {
+    if (!token) return;
+    const res = await fetch(`${API_URL}/api/projects`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ name })
+    });
+    const proj = await res.json();
+    setProjects(prev => [proj, ...prev]);
+    toast({ title: 'Projet créé' });
+    return proj._id;
+  }, [token]);
+
+  const renameProject = useCallback(async (id, newName) => {
+    if (!token) return;
+    const res = await fetch(`${API_URL}/api/projects/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ name: newName })
+    });
+    const proj = await res.json();
+    setProjects(prev => prev.map(p => p._id === id ? proj : p));
+  }, [token]);
+
+  const deleteProject = useCallback(async (id) => {
+    if (!token) return;
+    await fetch(`${API_URL}/api/projects/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+    setProjects(prev => prev.filter(p => p._id !== id));
+    setConversations(prev => prev.map(c => c.projectId === id ? { ...c, projectId: null } : c));
+  }, [token]);
+
+  return (
+    <ChatContext.Provider value={{
+      conversations,
+      projects,
+      activeConversationId,
+      setActiveConversationId,
+      createConversation,
+      deleteConversation,
+      renameConversation,
+      updateConversationSettings,
+      archiveConversation,
+      assignConversationToProject,
+      addMessage,
+      updateMessage,
+      editUserMessage,
+      activeConversation,
+      getConversationById,
+      isLoadingConversation,
+      createProject,
+      renameProject,
+      deleteProject
+    }}>
+      {children}
+    </ChatContext.Provider>
+  );
+};
+
+export default ChatContext;
