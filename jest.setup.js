@@ -1,8 +1,8 @@
 import '@testing-library/jest-dom';
 import 'whatwg-fetch';
 
-// Polyfill matchMedia
-if (!window.matchMedia) {
+// Polyfill matchMedia when running in browser-like environment
+if (typeof window !== 'undefined' && !window.matchMedia) {
   window.matchMedia = () => ({
     matches: false,
     addListener: () => {},
