@@ -20,10 +20,10 @@ describe('ChatContext', () => {
     localStorage.setItem('alyaUser', JSON.stringify(user));
     localStorage.setItem('alyaSession', JSON.stringify({ user, token: 'tok' }));
     global.fetch = jest.fn((url, opts) => {
-      if (url.endsWith('/api/conversations') && (!opts || opts.method === 'GET')) {
+      if (url.endsWith('/api/conversations') && (!opts || !opts.method || opts.method === 'GET')) {
         return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
       }
-      if (url.endsWith('/api/projects') && (!opts || opts.method === 'GET')) {
+      if (url.endsWith('/api/projects') && (!opts || !opts.method || opts.method === 'GET')) {
         return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
       }
       if (url.endsWith('/api/conversations') && opts.method === 'POST') {
@@ -38,7 +38,7 @@ describe('ChatContext', () => {
     });
   });
 
-  test.skip('create conversation and add message', async () => {
+  test('create conversation and add message', async () => {
     render(
       <AuthProvider>
         <ChatProvider>
