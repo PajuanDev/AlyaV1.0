@@ -32,7 +32,7 @@ Alya AI Chat is a React and Vite based web application providing an intelligent 
 
 ## Prerequisites
 
-- **Node.js** 20.19.1 (see `.nvmrc`)
+- **Node.js** 22.x (see `.nvmrc`)
 - npm 9+
 - Optional global tools: `pnpm` or `yarn` if you prefer alternative package managers.
 
