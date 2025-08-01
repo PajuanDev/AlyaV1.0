@@ -15,15 +15,17 @@ const PORT = process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
 
-if (process.env.MONGO_URL && process.env.NODE_ENV !== 'test') {
-=======
-// Only attempt to connect if a Mongo URL is defined. This prevents errors when
-// running in environments where the variable isn't set (e.g. some test setups).
-if (process.env.MONGO_URL) {
-
-  mongoose.connect(process.env.MONGO_URL, {
+export async function connectDb(url = process.env.MONGO_URL) {
+  if (!url) throw new Error('MONGO_URL not provided');
+  await mongoose.connect(url, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
+  });
+}
+
+if (process.env.MONGO_URL && process.env.NODE_ENV !== 'test') {
+  connectDb().catch((err) => {
+    console.error('MongoDB connection error', err);
   });
 }
 
