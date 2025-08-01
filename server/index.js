@@ -14,7 +14,13 @@ app.use(express.json());
 const PORT = process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
+
 if (process.env.MONGO_URL && process.env.NODE_ENV !== 'test') {
+=======
+// Only attempt to connect if a Mongo URL is defined. This prevents errors when
+// running in environments where the variable isn't set (e.g. some test setups).
+if (process.env.MONGO_URL) {
+
   mongoose.connect(process.env.MONGO_URL, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
